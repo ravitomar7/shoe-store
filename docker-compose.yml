@@ -1,0 +1,43 @@
+version: "2.2"
+services:
+  jobmanager:
+    image: ravitomar7/flink-kafka:v2
+    ports:
+      - "8081:8081"
+      - "8083:8083"
+    command: jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+  taskmanager:
+    image: ravitomar7/flink-kafka:v2
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    scale: 1
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 4       
+  sql-client:
+    image: ravitomar7/flink-kafka:v2
+    command: bin/sql-client.sh
+    depends_on:
+      - taskmanager
+      - mysql
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager     
+  mysql:
+    image: ravitomar7/mysql-debezium:v1 
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+        
